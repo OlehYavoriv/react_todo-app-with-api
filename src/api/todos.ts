@@ -14,3 +14,14 @@ export const deleteTodo = (todoId: number) => {
 export const addTodo = ({ title, userId, completed }: Omit<Todo, 'id'>) => {
   return client.post<Todo>(`/todos`, { title, userId, completed });
 };
+
+// export const updateTodo = (
+//   id: number,
+//   updates: Partial<Todo>,
+// ): Promise<Todo> => {
+//   return client.patch<Todo>(`/todos/${id}`, updates);
+// };
+
+export const updateTodo = (id: number, updateData: Partial<Todo>) => {
+  return client.patch(`/todos/${id}`, updateData);
+};

@@ -1,33 +1,28 @@
 import React from 'react';
 import cn from 'classnames';
 
-type ErrorNotificationProps = {
-  errorMessage: string | null;
-  onHide: () => void;
-  isVisible: boolean;
-};
+interface ErrorNotificationProps {
+  errorMessage: string;
+  setErrorMessage: (message: string) => void;
+}
 
 export const ErrorNotification: React.FC<ErrorNotificationProps> = ({
   errorMessage,
-  onHide,
-  isVisible,
+  setErrorMessage,
 }) => {
   return (
     <div
       data-cy="ErrorNotification"
       className={cn(
-        'notification',
-        'is-danger',
-        'is-light',
-        'has-text-weight-normal',
-        { hidden: !isVisible },
+        { hidden: !errorMessage.trim() },
+        'notification is-danger is-light has-text-weight-normal',
       )}
     >
       <button
         data-cy="HideErrorButton"
         type="button"
         className="delete"
-        onClick={onHide}
+        onClick={() => setErrorMessage('')}
       />
       {errorMessage}
     </div>
