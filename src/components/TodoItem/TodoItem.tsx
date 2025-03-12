@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import cn from 'classnames';
 import { Todo } from '../../types/Todo';
 import { deleteTodo, updateTodo, USER_ID } from '../../api/todos';
@@ -59,70 +59,83 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     if (isDelete) {
       setIsDelete(false);
     }
-  }, [isDelete]);
+  }, [isDelete, setIsDelete]);
 
-  const handleDeleteTodo = async () => {
+  const handleDeleteTodo = useCallback(async () => {
     try {
       setIsLoading(true);
       await deleteTodo(id);
 
-      setTodos((prevTodos: Todo[]) => {
-        return prevTodos.filter((currentTodo: Todo) => currentTodo.id !== id);
-      });
+      setTodos(prevTodos =>
+        prevTodos.filter(currentTodo => currentTodo.id !== id),
+      );
       setIsDelete(true);
     } catch {
       setErrorMessage('Unable to delete a todo');
-
       if (!editTitle.trim().length) {
         setIsEditTodo(true);
       }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id, setTodos, setIsDelete, setErrorMessage, editTitle]);
 
-  const handleSubmitEdit = (event?: React.FormEvent<HTMLFormElement>) => {
-    event?.preventDefault();
+  const handleSubmitEdit = useCallback(
+    (event?: React.FormEvent<HTMLFormElement>) => {
+      event?.preventDefault();
 
-    if (editTitle.trim().length) {
-      if (editTitle.trim() !== title.trim()) {
-        const newTodo = { ...todo, title: editTitle.trim() };
+      if (editTitle.trim().length) {
+        if (editTitle.trim() !== title.trim()) {
+          const newTodo = { ...todo, title: editTitle.trim() };
 
-        setIsLoading(true);
-        updateTodo(id, newTodo)
-          .then(updatedTodo => {
-            setTodos((prevTodos: Todo[]) =>
-              prevTodos.map(currentTodo =>
-                currentTodo.id === updatedTodo.id ? updatedTodo : currentTodo,
-              ),
-            );
+          setIsLoading(true);
+          updateTodo(id, newTodo)
+            .then(updatedTodo => {
+              setTodos((prevTodos: Todo[]) =>
+                prevTodos.map(currentTodo =>
+                  currentTodo.id === updatedTodo.id ? updatedTodo : currentTodo,
+                ),
+              );
 
-            setIsError(false);
-          })
-          .catch(() => {
-            setErrorMessage('Unable to update a todo');
-            setIsError(true);
-          })
-          .finally(() => {
-            setIsLoading(false);
-          });
+              setIsError(false);
+            })
+            .catch(() => {
+              setErrorMessage('Unable to update a todo');
+              setIsError(true);
+            })
+            .finally(() => {
+              setIsLoading(false);
+            });
+        }
+      } else {
+        handleDeleteTodo();
       }
-    } else {
-      handleDeleteTodo();
-    }
 
-    setIsEditTodo(false);
+      setIsEditTodo(false);
 
-    if (isEsc) {
-      setIsEsc(false);
-    }
-  };
+      if (isEsc) {
+        setIsEsc(false);
+      }
+    },
+    [
+      editTitle,
+      title,
+      todo,
+      id,
+      setTodos,
+      setIsLoading,
+      setIsError,
+      setErrorMessage,
+      isEsc,
+      handleDeleteTodo,
+    ],
+  );
 
   useEffect(() => {
     if (isEditTodo && isEsc) {
       handleSubmitEdit();
     }
-  }, [isEditTodo, isEsc]);
+  }, [isEditTodo, isEsc, handleSubmitEdit]);
 
   const handleSwitchCheck = () => {
     const newTodo = { ...todo, completed: !completed };
